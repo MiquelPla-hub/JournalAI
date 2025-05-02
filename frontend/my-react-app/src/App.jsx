@@ -8,9 +8,14 @@ function App() {
   const [count, setCount] = useState(0)
   const [message, setMessage] = useState('')
   const [response, setResponse] = useState('')
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleMessageChange = (e) => {
     setMessage(e.target.value)
+  }
+
+  const toggleModal = () => {
+    setIsModalOpen(!isModalOpen)
   }
 
   const handleSubmit = async (e) => {
@@ -31,31 +36,52 @@ function App() {
   }
 
   return (
-    
-    
-        <div className="main-container"> 
-          <h1 className="text-2xl font-bold mb-4">Social Media Content Generator</h1>
-          <form onSubmit={handleSubmit} className="mb-4">
-            <input
-              type="text"
-              value={message}
-              onChange={handleMessageChange}
-              placeholder="Enter your message here..."
-              className="w-full p-2 border border-gray-300 rounded-md"
-            />
-            <button type="submit" className="bg-blue-500 text-white p-2 rounded-md mt-2">
-              Generate
-            </button>
-          </form>
-          {response && (
-            <div className="mt-4 p-4 border border-gray-300 rounded-md">
-              <h2 className="text-lg font-bold mb-2">Generated Content:</h2>
-              <p className="text-gray-700">{response}</p>
-            </div>
-          )}
+    <div className={`app-wrapper ${isModalOpen ? 'modal-open' : ''}`}>
+      <div className="main-container"> 
+        <div className="title-container">
+          <h1>Journal AI</h1>
+          <button onClick={toggleModal} className="modal-toggle-button">
+            Open Panel
+          </button>
         </div>
-     
-   
+        
+        {response ?  (
+          <div className="response-container">
+            <p className="text-gray-700">{response}</p>
+          </div>
+        ) :(
+          <div className="notebook-container">
+            <img src="notebook.svg" height="50" width="50" alt="logo" />
+          </div>
+        )}
+
+        <div className="chat-container">
+          <form onSubmit={handleSubmit}>
+            <div className="chat-input-container">
+              <textarea
+                value={message}
+                onChange={handleMessageChange}
+                placeholder="How are you feeling today?"
+                className="chat-input"
+              />
+              <button type="submit" className="generate-button">
+                Generate
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <div className={`side-modal ${isModalOpen ? 'open' : ''}`}>
+        <button onClick={toggleModal} className="close-modal-button">
+          &times;
+        </button>
+        <div className="modal-content">
+          <h2>Side Panel</h2>
+          <p>This is your side panel content.</p>
+        </div>
+      </div>
+    </div>
   )
 }
 
