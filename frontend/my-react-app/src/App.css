@@ -1,9 +1,3 @@
-#root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
 
 .logo {
   height: 6em;
@@ -33,62 +27,20 @@
   }
 }
 
-.card {
-  padding: 2em;
-}
 
 .read-the-docs {
   color: #888;
 }
 
-/* Sidebar Styles */
-.sidebar {
-  position: sticky;
-  top: 0;
+
+
+
+
+.main-container {
+  margin: 0;
+  padding: 0;
+  width: 100vw;
   height: 100vh;
-  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-}
-
-.sidebar-logo {
-  margin-bottom: 2rem;
+  background-color: #2e2e2e;
   text-align: center;
-}
-
-.sidebar-nav-item {
-  display: flex;
-  align-items: center;
-  transition: all 0.2s ease;
-}
-
-.sidebar-nav-item:hover {
-  transform: translateX(5px);
-}
-
-.sidebar-nav-item svg {
-  margin-right: 10px;
-}
-
-/* Active link style */
-.active-link {
-  background-color: rgba(255, 255, 255, 0.1);
-  border-left: 3px solid #3b82f6;
-}
-
-/* Main content area */
-.main-content {
-  min-height: 100vh;
-  background-color: #f9fafb;
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  .sidebar {
-    width: 0;
-    overflow: hidden;
-  }
-  
-  .sidebar.open {
-    width: 250px;
-  }
 }
