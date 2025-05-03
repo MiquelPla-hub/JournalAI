@@ -66,9 +66,12 @@ function App() {
                 placeholder="How are you feeling today?"
                 className="chat-input"
               />
-              <button type="submit" className="generate-button">
-                Generate
-              </button>
+              <div className="buttons-container">
+                <button type="submit" className="generate-button">
+                  Generate
+                </button>
+                <Realtime2 />
+              </div>
             </div>
           </form>
         </div>
@@ -78,10 +81,7 @@ function App() {
         <button onClick={toggleModal} className="close-modal-button">
           &times;
         </button>
-        <div className="modal-content">
-          <h2>Voice Chat</h2>
-          <Realtime2 />
-        </div>
+       
       </div>
     </div>
   )

@@ -2,17 +2,13 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
 function Realtime2() {
-  const [key, setKey] = useState('');
-  const [messages, setMessages] = useState([]);
+
+  
   const [isConnected, setIsConnected] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const [emotionData, setEmotionData] = useState(null);
-  const [emotionSummary, setEmotionSummary] = useState(null);
   const dataChannelRef = React.useRef(null);
   const pcRef = React.useRef(null);
   const summaryIntervalRef = React.useRef(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [transcribedText, setTranscribedText] = useState('');
+  
   const mediaRecorderRef = React.useRef(null);
   const audioChunksRef = React.useRef([]);
 
@@ -30,8 +26,7 @@ function Realtime2() {
       
       const data = tokenResponse.data;
       const EPHEMERAL_KEY = data.client_secret.value;
-      setKey(EPHEMERAL_KEY);
-
+    
       // Create a peer connection
       const pc = new RTCPeerConnection();
       pcRef.current = pc;
@@ -57,7 +52,7 @@ function Realtime2() {
       dc.addEventListener("message", handleServerEvent);
       dc.addEventListener("open", () => {
         setIsConnected(true);
-        console.log("Data channel opened");
+     
       });
       
       // Start the session using the Session Description Protocol (SDP)
@@ -112,7 +107,7 @@ function Realtime2() {
     
     // Start recording in 5-second chunks for continuous transcription
     mediaRecorder.start();
-    setIsRecording(true);
+    
     
     // Set up interval to stop and restart recording every 5 seconds
     const recordingInterval = setInterval(() => {
@@ -142,7 +137,7 @@ function Realtime2() {
       // If we have transcribed text, update the state
       if (response.data && response.data.text) {
         setTranscribedText(response.data.text);
-        console.log('Transcribed text:', response.data.text);
+    
         
         // Optionally, automatically send the transcribed text as a message
         if (response.data.text.trim()) {
@@ -162,38 +157,9 @@ function Realtime2() {
       type: "session.update",
       session: {
         instructions: `
-          You are a helpful assistant engaging in natural spoken conversations. 
-          Continuously analyze the user's emotional state from their speech or text.
-          
-          Important:
-          - Always respond conversationally (speaking normally, human-like).
-          - Additionally, every time you detect or update the user's emotion (happy, sad, neutral, angry, etc.), silently send a JSON-formatted emotion event through the data channel in the following format:
+          You are a helpful mental health coach engaging in natural spoken conversations. 
+          Continuously analyze the user's emotional state from their speech or text and help them with their mental health.
 
-          {
-            "type": "user.emotion.update",
-            "emotion": "happy" | "sad" | "neutral" | "angry" | "confused" | "other",
-            "confidence": 0.0 to 1.0,
-            "reason": "brief reason explaining your detection"
-          }
-
-          - When you receive a "request.emotion.summary" event, respond with a comprehensive JSON summary of the conversation's emotional content:
-
-          {
-            "type": "emotion.summary",
-            "requestId": [the ID from the request],
-            "emotionTimeline": [
-              {
-                "timestamp": "relative time in conversation",
-                "emotion": "detected emotion",
-                "confidence": 0.0 to 1.0,
-                "context": "what was being discussed"
-              }
-            ],
-            "dominantEmotions": ["primary", "secondary"],
-            "summary": "brief textual summary of emotional journey"
-          }
-
-          NEVER speak the JSON aloud. Only send it silently over the data channel.
         `
       },
     };
@@ -217,12 +183,12 @@ function Realtime2() {
   const handleServerEvent = (e) => {
     try {
       const serverEvent = JSON.parse(e.data);
-      console.log("Received server event:", serverEvent);
+      
 
       // Handle different types of server events
       switch (serverEvent.type) {
         case "session.created":
-          console.log("Session created successfully");
+     
           // Update session with instructions if needed
           updateSessionInstructions();
           
@@ -234,13 +200,12 @@ function Realtime2() {
           break;
         
         case "input_audio_buffer.speech_started":
-          console.log("Speech detected - user is speaking");
-          setIsListening(true);
+        
           break;
           
         case "input_audio_buffer.speech_stopped":
-          console.log("Speech stopped - user finished speaking");
-          setIsListening(false);
+          
+       
           break;
           
         case "response.text.delta":
@@ -251,33 +216,31 @@ function Realtime2() {
           break;
           
         case "response.done":
-          console.log("Response completed:", serverEvent.response);
-          // Final response handling if needed
+        
+          // Extract and handle final content if available
+          if (serverEvent.response && serverEvent.response.output) {
+            const output = serverEvent.response.output;
+            if (output && output.length > 0 && output[0].content) {
+                const transcript = output[0].content[0].transcript;
+                console.log(transcript);
+              } 
+            
+            // Look for text content in the output
+            const textContent = output.find(item => item.type === 'text');
+            if (textContent && textContent.text) {
+              console.log("Adding final text content:", textContent.text);
+              // This ensures we get the final complete text if needed
+              addModelMessage(textContent.text, false);
+            }
+          }
           break;
           
-        case "user.emotion.update":
-          console.log("User Emotion Detected:", serverEvent);
-          // Update the current emotion data
-          setEmotionData({
-            emotion: serverEvent.emotion,
-            confidence: serverEvent.confidence,
-            reason: serverEvent.reason,
-            timestamp: new Date().toISOString()
-          });
-          break;
-          
-        case "emotion.summary":
-          console.log("Received emotion summary:", serverEvent);
-          // Store the summary JSON
-          setEmotionSummary(serverEvent);
-          break;
           
         default:
-          // Handle other event types as needed
-          break;
+          // Handle other event types as need
       }
     } catch (error) {
-      console.error("Error handling server event:", error);
+      console.error("Error handling server event:", error, e.data);
     }
   };
 
@@ -316,34 +279,18 @@ function Realtime2() {
 
   // Add a user message to the UI
   const addUserMessage = (text) => {
+
     setMessages(prev => [...prev, { role: 'user', content: text }]);
   };
 
-  // Add a model message to the UI
-  const addModelMessage = (text, isDelta = false) => {
-    setMessages(prev => {
-      // If this is a delta (partial) update and we already have an assistant message
-      if (isDelta && prev.length > 0 && prev[prev.length - 1].role === 'assistant') {
-        // Update the last message
-        const newMessages = [...prev];
-        newMessages[newMessages.length - 1] = {
-          ...newMessages[newMessages.length - 1],
-          content: newMessages[newMessages.length - 1].content + text
-        };
-        return newMessages;
-      } else {
-        // Add a new message
-        return [...prev, { role: 'assistant', content: text }];
-      }
-    });
-  };
+
 
   // Modify disconnect to stop recording
   const disconnect = () => {
     // Stop recording if active
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
-      setIsRecording(false);
+    
     }
     
     // Clear the summary interval
@@ -371,18 +318,14 @@ function Realtime2() {
           dataChannelRef.current.close();
         }
         setIsConnected(false);
-        setMessages([]);
-        setEmotionData(null);
-        setEmotionSummary(null);
+       
       }, 1000);
     } else {
       if (pcRef.current) {
         pcRef.current.close();
       }
       setIsConnected(false);
-      setMessages([]);
-      setEmotionData(null);
-      setEmotionSummary(null);
+      
     }
   };
 
@@ -395,187 +338,25 @@ function Realtime2() {
     };
   }, []);
 
-  // Handle form submission
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    const input = e.target.elements.messageInput;
-    const text = input.value.trim();
-    if (text) {
-      sendTextMessage(text);
-      input.value = '';
-    }
-  };
+
 
   return (
-    <div className="realtime-container" style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
-      <h1>OpenAI Realtime Chat</h1>
+    <>
+    
       
-      {!isConnected ? (
+
         <button 
-          onClick={connectToRealtime}
-          style={{ padding: '10px 20px', fontSize: '16px', marginBottom: '20px' }}
+          onClick={isConnected ? disconnect : connectToRealtime}
+          style={{ backgroundColor: isConnected ? 'red' : '' }}
         >
-          Connect to Realtime
+          {!isConnected ? (
+            "Talk"
+          ) : (
+            "Stop"
+          )}
         </button>
-      ) : (
-        <button 
-          onClick={disconnect}
-          style={{ padding: '10px 20px', fontSize: '16px', marginBottom: '20px', backgroundColor: '#ff4d4d' }}
-        >
-          Disconnect
-        </button>
-      )}
       
-      {isListening && (
-        <div style={{ color: 'green', marginBottom: '10px' }}>
-          Listening...
-        </div>
-      )}
-      
-      {isRecording && (
-        <div style={{ color: 'red', marginBottom: '10px' }}>
-          Recording for transcription...
-        </div>
-      )}
-      
-      {/* Current Emotion Display */}
-      {emotionData && (
-        <div style={{ 
-          marginBottom: '15px', 
-          padding: '10px', 
-          backgroundColor: '#f0f0f0', 
-          borderRadius: '5px',
-          border: '1px solid #ddd'
-        }}>
-          <h3>Current Emotion</h3>
-          <p><strong>Emotion:</strong> {emotionData.emotion}</p>
-          <p><strong>Confidence:</strong> {(emotionData.confidence * 100).toFixed(1)}%</p>
-          <p><strong>Reason:</strong> {emotionData.reason}</p>
-        </div>
-      )}
-      
-      {/* Emotion Summary Display */}
-      {emotionSummary && (
-        <div style={{ 
-          marginBottom: '15px', 
-          padding: '10px', 
-          backgroundColor: '#f5f5f5', 
-          borderRadius: '5px',
-          border: '1px solid #ddd',
-          maxHeight: '200px',
-          overflowY: 'auto'
-        }}>
-          <h3>Emotion Summary</h3>
-          <p><strong>Dominant Emotions:</strong> {emotionSummary.dominantEmotions?.join(', ')}</p>
-          <p><strong>Summary:</strong> {emotionSummary.summary}</p>
-          <details>
-            <summary>View Full JSON</summary>
-            <pre style={{ 
-              backgroundColor: '#f8f8f8', 
-              padding: '10px', 
-              borderRadius: '5px',
-              overflowX: 'auto',
-              fontSize: '12px'
-            }}>
-              {JSON.stringify(emotionSummary, null, 2)}
-            </pre>
-          </details>
-        </div>
-      )}
-      
-      {transcribedText && (
-        <div style={{ 
-          marginBottom: '15px', 
-          padding: '10px', 
-          backgroundColor: '#e6f7ff', 
-          borderRadius: '5px',
-          border: '1px solid #91d5ff'
-        }}>
-          <h3>Last Transcription</h3>
-          <p>{transcribedText}</p>
-        </div>
-      )}
-      
-      <div className="messages-container" style={{ 
-        height: '400px', 
-        overflowY: 'auto', 
-        border: '1px solid #ccc', 
-        padding: '10px',
-        marginBottom: '20px',
-        borderRadius: '5px'
-      }}>
-        {messages.map((msg, index) => (
-          <div 
-            key={index} 
-            style={{ 
-              marginBottom: '10px',
-              textAlign: msg.role === 'user' ? 'right' : 'left',
-            }}
-          >
-            <div style={{
-              display: 'inline-block',
-              padding: '8px 12px',
-              borderRadius: '12px',
-              maxWidth: '70%',
-              backgroundColor: msg.role === 'user' ? '#0084ff' : '#e5e5ea',
-              color: msg.role === 'user' ? 'white' : 'black',
-            }}>
-              {msg.content}
-            </div>
-          </div>
-        ))}
-      </div>
-      
-      {isConnected && (
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex' }}>
-            <input
-              type="text"
-              name="messageInput"
-              placeholder="Type a message..."
-              style={{ 
-                flex: 1, 
-                padding: '10px', 
-                fontSize: '16px',
-                borderRadius: '5px 0 0 5px',
-                border: '1px solid #ccc',
-              }}
-            />
-            <button 
-              type="submit"
-              style={{ 
-                padding: '10px 20px', 
-                fontSize: '16px',
-                backgroundColor: '#0084ff',
-                color: 'white',
-                border: 'none',
-                borderRadius: '0 5px 5px 0',
-              }}
-            >
-              Send
-            </button>
-          </div>
-        </form>
-      )}
-      
-      {/* Manual Summary Request Button */}
-      {isConnected && (
-        <button
-          onClick={requestEmotionSummary}
-          style={{ 
-            marginTop: '10px',
-            padding: '8px 15px', 
-            fontSize: '14px',
-            backgroundColor: '#4CAF50',
-            color: 'white',
-            border: 'none',
-            borderRadius: '5px',
-          }}
-        >
-          Request Emotion Summary
-        </button>
-      )}
-    </div>
+      </>
   );
 }
 
