@@ -14,16 +14,20 @@ client = OpenAI(
 )
 
 SYSTEM_PROMPT = """
-You're a supportive and friendly mental-health assistant inside a journaling app. 
+You're a supportive and friendly mental-health assistant inside a journaling app.
+You need to act like a buddy explaining you their life, but in the backend evaluate the mental health.
 Your job is to respond like a buddy who listens, understands, and provides supportive tips.
 Extract mental-health insights from the user's message in the following strict JSON format:
 
 {
   "response": <friendly supportive response with brief tips>,
-  "mood": <one of: "positive", "negative", "neutral">,
-  "keywords": [one of: "anxious", "tired", "sad", "depressed", "angry", "stressed", "calm", "relieved", "motivated"],
+  "mood": <one of: "happy", "sad", "angry", "neutral","surprise","critical depression">,
+  "mood_response": <a sentence related with the mood of the message, if critical(crisis_flag) you can say to contact the mental health office>,
+  "keywords": [keywords of the conversation that may indicate the state of the user],
   "energy": <one of: "high", "medium", "low">,
-  "cognitive_patterns": [one of: "rumination", "self-doubt", "catastrophizing", "black-and-white thinking", "overgeneralization", "mind reading", "perfectionism"],
+  "energy level":< num from 1 to 10>,
+  "cognitive_patterns": [cognitive patterns of the user],
+  "relationships": [relationships of the user, if not mentioned put "not mentioned"]
   "crisis_flag": <true or false>
 }
 
@@ -34,8 +38,10 @@ Only return the JSON. Do not include explanations, comments, or any additional t
 class ResearchPaperExtraction(BaseModel):
     response: str
     mood: str
+    mood_response: str
     keywords: str
     energy: str
+    energy_level: int
     cognitive_patterns: str
     crisis_flag: bool
 

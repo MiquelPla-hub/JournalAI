@@ -3,6 +3,12 @@ import './App.css'
 import Realtime2 from './Realtime2'
 import LeftSidebar from './LeftSidebar'
 import { useEffect } from 'react'
+import happyImg from './assets/happy.jpg'
+import sadGif from './assets/sad.gif'
+import angryGif from './assets/angry.gif'
+import neutralGif from './assets/neutral.gif'
+import surpriseGif from './assets/surprise.gif'
+import critical from './assets/critical_depression.jpg'
 function App() {
 
   const [message, setMessage] = useState('')
@@ -12,14 +18,40 @@ function App() {
   const [recomendations, setRecomendations] = useState([])
 
   const [activePanel, setActivePanel] = useState('custom')
-  const [imagePopUp, setImagePopUp] = useState(false)
+  const [imagePopUp, setImagePopUp] = useState(true)
+  const [imgURL, setImgURL] = useState("assets/sad.gif")
+  const [responseMood, setResponseMood] = useState("NOTHING FOR NOW")
+
   
  
 
   useEffect(() => {
+
     if(recomendations && Object.keys(recomendations).length > 0){
+      console.log(recomendations.recommendation.data.mood)
+      switch (recomendations.recommendation.data.mood) {
+        case "happy":
+        setImgURL(happyImg)
+        break
+      case "sad":
+        setImgURL(sadGif)
+        break
+      case "angry":
+        setImgURL(angryGif)
+        break
+        case "neutral":
+        setImgURL(neutralGif)
+        break
+      case "surprise":
+        setImgURL(surpriseGif)
+        break
+      case "critical depression":
+        setImgURL(critical)
+        break
+      }
+        setResponseMood(recomendations.recommendation.data.mood_response)
         setImagePopUp(true)
-        console.log(recomendations.recommendation.data.mood)
+        console.log(recomendations.recommendation.data.mood_response)
        
        
           setIsModalOpen(true)
@@ -130,11 +162,14 @@ function App() {
             <br />
             <div className="limited-box"></div>
             <br />
+            <img src={imgURL} alt="Can't find the image" style={{ width: '500px', height: '450px' }} />
+            <br/>
             <p>
-              Welcome to your AI-powered voice journal. Speak freely, reflect deeply, and let the assistant
-              help you process your thoughts through real-time transcription and meaningful feedback.
+              {responseMood}
             </p>
-            {imagePopUp && <img src="sad.jpeg" alt="sad" />}
+            <br/>
+
+
           </div>
         ) : (
           <div className="dev-panel">
