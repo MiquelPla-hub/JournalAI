@@ -2,14 +2,38 @@ import { useState } from 'react'
 import './App.css'
 import Realtime2 from './Realtime2'
 import LeftSidebar from './LeftSidebar'
-
+import { useEffect } from 'react'
 function App() {
 
   const [message, setMessage] = useState('')
   const [response, setResponse] = useState('')
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [recomendations, setRecomendations] = useState([])
 
+  const [activePanel, setActivePanel] = useState('custom')
+  const [imagePopUp, setImagePopUp] = useState(false)
+  
+ 
+
+  useEffect(() => {
+    if(recomendations && Object.keys(recomendations).length > 0){
+        setImagePopUp(true)
+        console.log(recomendations.recommendation.data.mood)
+       
+       
+          setIsModalOpen(true)
+          setTimeout(() => {
+            setIsModalOpen(false)
+          }, 5000)
+      
+    }
+  }, [recomendations])
+
+
+  const togglePanel = () => {
+  setActivePanel((prev) => (prev === 'custom' ? 'dev' : 'custom'))
+}
   const handleMessageChange = (e) => {
     setMessage(e.target.value)
   }
@@ -27,6 +51,9 @@ function App() {
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen)
   }
+
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -78,7 +105,10 @@ function App() {
                 <button type="submit" className="generate-button">
                   Generate
                 </button>
-                <Realtime2 />
+                <Realtime2 
+                  
+                  setRecomendations={setRecomendations}
+                />
               </div>
             </div>
           </form>
@@ -89,8 +119,29 @@ function App() {
         <button onClick={closeModal} className="close-modal-button">
           &times;
         </button>
-       
-      </div>
+
+        <button onClick={togglePanel} className="toggle-panel-button">
+          Switch Panel
+        </button>
+
+        {activePanel === 'custom' ? (
+          <div className="custom-panel">
+            <p className="left-text">Here you can see some support material for your situation:</p>
+            <br />
+            <div className="limited-box"></div>
+            <br />
+            <p>
+              Welcome to your AI-powered voice journal. Speak freely, reflect deeply, and let the assistant
+              help you process your thoughts through real-time transcription and meaningful feedback.
+            </p>
+            {imagePopUp && <img src="sad.jpeg" alt="sad" />}
+          </div>
+        ) : (
+          <div className="dev-panel">
+            <p>This is the developer panel. Add dev tools or logs here.</p>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

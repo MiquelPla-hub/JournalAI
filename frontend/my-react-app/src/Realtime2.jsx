@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-function Realtime2() {
+function Realtime2({ setRecomendations}) {
 
   
   const [isConnected, setIsConnected] = useState(false);
@@ -133,7 +133,7 @@ function Realtime2() {
           'Content-Type': 'multipart/form-data'
         }
       });
-      
+      setRecomendations(response.data)
       // If we have transcribed text, update the state
       if (response.data && response.data.text) {
         setTranscribedText(response.data.text);

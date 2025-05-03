@@ -43,8 +43,12 @@ def transcribe_audio():
                 file=audio
             )
 
-       
-        
+        # Clean up temporary file immediately after use
+        try:
+            os.remove(temp_path)
+        except Exception as e:
+            print(f"Warning: Could not remove temporary file: {e}")
+
         # Handle different possible response formats
         if hasattr(transcript, 'text'):
             transcribed_text = transcript.text
@@ -52,22 +56,22 @@ def transcribe_audio():
             transcribed_text = transcript['text']
         else:
             transcribed_text = str(transcript)
-            
-       
         
-        # Clean up temporary file
-        try:
-            os.remove(temp_path)
-        except Exception as e:
-            print(f"Warning: Could not remove temporary file: {e}")
+        # Get recommendations based on transcribed text
+        recommendation_response = chat_response(transcribed_text)
         
-        response = chat_response(transcribed_text)
-        print(response)
-        return jsonify(response)  # if it's a Pydantic model
+        # Return both transcription and recommendations immediately
+        return jsonify({
+            'transcription': transcribed_text,
+            'recommendation': recommendation_response
+        })
         
     except Exception as e:
         print(f"Transcription error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+    
+
+
 
 @app.route('/api/session', methods=['POST'])
 def create_session():

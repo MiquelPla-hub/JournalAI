@@ -21,9 +21,9 @@ Extract mental-health insights from the user's message in the following strict J
 {
   "response": <friendly supportive response with brief tips>,
   "mood": <one of: "positive", "negative", "neutral">,
-  "keywords": [up to 3 from: "anxious", "overwhelmed", "tired", "sad", "depressed", "angry", "stressed", "hopeless", "calm", "relieved", "motivated", "grateful"],
+  "keywords": [one of: "anxious", "tired", "sad", "depressed", "angry", "stressed", "calm", "relieved", "motivated"],
   "energy": <one of: "high", "medium", "low">,
-  "cognitive_patterns": [up to 2 from: "rumination", "self-doubt", "catastrophizing", "black-and-white thinking", "overgeneralization", "mind reading", "perfectionism"],
+  "cognitive_patterns": [one of: "rumination", "self-doubt", "catastrophizing", "black-and-white thinking", "overgeneralization", "mind reading", "perfectionism"],
   "crisis_flag": <true or false>
 }
 
@@ -34,10 +34,9 @@ Only return the JSON. Do not include explanations, comments, or any additional t
 class ResearchPaperExtraction(BaseModel):
     response: str
     mood: str
-    keywords: list[str]
+    keywords: str
     energy: str
-    cognitive_patterns: list[str]
-    social_context: str
+    cognitive_patterns: str
     crisis_flag: bool
 
 def chat_response(user_message):
