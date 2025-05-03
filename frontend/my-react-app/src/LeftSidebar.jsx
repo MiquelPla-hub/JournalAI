@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { FiHome, FiPlus, FiBook, FiSettings } from "react-icons/fi";
+import { FiHome, FiPlus, FiBook, FiSettings, FiInfo } from "react-icons/fi";
 function LeftSidebar({ isOpen, onClose, setNewEntry }) {
   return (
     <div className={`left-sidebar ${isOpen ? 'visible' : 'hidden'}`}>
@@ -18,7 +18,12 @@ function LeftSidebar({ isOpen, onClose, setNewEntry }) {
             <FiBook size={20} />
             <span>Journal Entries</span>
           </li>
-          
+          <li className="sidebar-item">
+            <a href="/landing" target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center' }}>
+              <FiInfo size={20} style={{ marginRight: '10px' }} />
+              <span>About Us</span>
+            </a>
+          </li>
           <li className="sidebar-item">
             <FiSettings size={20} />
             <span>Settings</span>

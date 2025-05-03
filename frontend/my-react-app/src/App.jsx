@@ -1,8 +1,7 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import './App.css'
 import Realtime2 from './Realtime2'
 import LeftSidebar from './LeftSidebar'
-import { useEffect } from 'react'
 import happyImg from './assets/happy.jpg'
 import sadGif from './assets/sad.gif'
 import angryGif from './assets/angry.gif'
@@ -27,6 +26,9 @@ function App() {
 
   const [circleColor, setCircleColor] = useState('black')
   const [newEntry, setNewEntry] = useState(false)
+  const [isCameraOn, setIsCameraOn] = useState(false)
+  const videoRef = useRef(null)
+
   useEffect(() => {
 
     if(recomendations && Object.keys(recomendations).length > 0 && isConnected){
@@ -74,7 +76,7 @@ function App() {
 
   
   const togglePanel = () => {
-  setActivePanel((prev) => (prev === 'custom' ? 'dev' : 'custom'))
+  setActivePanel((prev) => (prev === 'custom' ? 'dev' : 'custom'))
 }
   const handleMessageChange = (e) => {
     setMessage(e.target.value)
@@ -139,12 +141,104 @@ function App() {
     }
   }
 
+  // Function to start the camera
+  const startCamera = async () => {
+    try {
+      // First set isCameraOn to true, so the video element renders
+      setIsCameraOn(true);
+      
+      // Add a small delay to ensure the video element is in the DOM
+      setTimeout(async () => {
+        if (!videoRef.current) {
+          console.error("Video reference still not available after delay");
+          return;
+        }
+        
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+          video: true,
+          audio: false
+        });
+        
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+          console.log("Camera stream attached to video element");
+          
+          // Add event listeners for debugging
+          videoRef.current.onloadedmetadata = () => {
+            console.log("Video metadata loaded");
+            videoRef.current.play()
+              .then(() => console.log("Video playing successfully"))
+              .catch(e => console.error("Error playing video:", e));
+          };
+          
+          videoRef.current.onerror = (e) => {
+            console.error("Video element error:", e);
+          };
+        }
+      }, 100); // Short delay to ensure DOM update
+    } catch (err) {
+      console.error("Error accessing camera:", err);
+      setIsCameraOn(false);
+    }
+  };
+
+  // Function to stop the camera
+  const stopCamera = () => {
+    if (videoRef.current && videoRef.current.srcObject) {
+      const tracks = videoRef.current.srcObject.getTracks();
+      tracks.forEach(track => track.stop());
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraOn(false);
+  };
+
+  // Toggle camera on/off
+  const toggleCamera = () => {
+    if (isCameraOn) {
+      stopCamera();
+    } else {
+      startCamera();
+    }
+  };
+
+  // Clean up camera when component unmounts
+  useEffect(() => {
+    return () => {
+      if (isCameraOn) {
+        stopCamera();
+      }
+    };
+  }, [isCameraOn]);
+
   return (
     <div className={`app-wrapper ${isModalOpen ? 'modal-open' : ''} ${isSidebarOpen ? 'sidebar-open' : ''}`}>
       <LeftSidebar isOpen={isSidebarOpen} setNewEntry={setNewEntry} onClose={() => setIsSidebarOpen(false)} />
       
       <div className="main-container"> 
-      <div className="title-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        {/* Camera toggle button - move it away from where camera will appear */}
+        <button 
+          className="camera-toggle" 
+          onClick={toggleCamera}
+          style={{ top: '20px', left: isCameraOn ? '280px' : '20px' }}
+        >
+          {isCameraOn ? 'X' : 'Turn On Camera'}
+        </button>
+
+        {/* Camera container */}
+        {isCameraOn && (
+          <div className="camera-container">
+            <video 
+              ref={videoRef} 
+              autoPlay 
+              playsInline
+              muted
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            ></video>
+            
+          </div>
+        )}
+        
+        <div className="title-container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <h1>How are you feeling today?</h1>
 
           <button className="modal-toggle-button" onClick={openModal}>
