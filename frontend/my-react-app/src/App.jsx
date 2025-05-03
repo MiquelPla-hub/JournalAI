@@ -2,6 +2,8 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import RealtimeChat from './RealtimeChat'
+import Realtime2 from './Realtime2'
 
 
 function App() {
@@ -77,8 +79,8 @@ function App() {
           &times;
         </button>
         <div className="modal-content">
-          <h2>Side Panel</h2>
-          <p>This is your side panel content.</p>
+          <h2>Voice Chat</h2>
+          <Realtime2 />
         </div>
       </div>
     </div>
