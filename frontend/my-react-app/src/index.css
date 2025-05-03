@@ -12,9 +12,7 @@ html, body, #root {
   overflow-x: hidden;
 }
 
-body {
-  background-color: #2e2e2e;
-}
+
 
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -74,13 +72,4 @@ button:focus-visible {
   }
 }
 
-.chat-container {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-
-  width: 500px;
-  height: 500px;
-
-}
 

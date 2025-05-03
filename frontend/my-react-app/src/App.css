@@ -46,7 +46,7 @@
   padding: 0;
   width: 100%;
   height: 100vh;
-  background-color: #2e2e2e;
+  background-color: white;
   text-align: center;
   transition: width 0.3s ease-in-out;
   flex: 1;
@@ -79,7 +79,8 @@
 .title-container {
   margin-top: 50px;
   text-align: center;
-  color: white;
+  color: black;
+  font-size: 14px;
 }
 
 .chat-container {
@@ -87,9 +88,10 @@
   bottom: 20px;
   left: 0;
   width: 100%;
-  height: 100px;
+  height: 120px;
   display: flex;
   justify-content: center;
+
 }
 
 .chat-input-container {
@@ -100,11 +102,13 @@
   border-radius: 15px;
   padding: 10px 20px;
   position: relative;
+  box-shadow: 0 0 15px 0 rgba(0, 0, 0, 0.1);
+  border: 1px solid #e0e0e0;
 }
 
 .chat-input {
   flex: 1;
-  min-height: 80px;
+  min-height: 100px;
   resize: none;
   background-color: transparent;
   font-size: 16px;
@@ -126,7 +130,7 @@
 }
 
 .generate-button {
-  background-color: #646cff;
+  background-color: #3943ff;
   color: white;
   padding: 10px 20px;
   border-radius: 10px;
@@ -138,7 +142,7 @@
 
 /* Style for the Realtime2 button to match */
 .buttons-container button {
-  background-color: #646cff;
+  background-color: #3943ff;
   color: white;
   padding: 10px 20px;
   border-radius: 10px;
@@ -190,4 +194,89 @@
 /* Remove the overlay since we're not using it anymore */
 .modal-overlay {
   display: none;
+}
+
+/* Left sidebar styling */
+.left-sidebar {
+  width: 250px;
+  padding: 5px;
+  height: 100vh;
+  background-color: white;
+  box-shadow: 5px 0 15px rgba(0, 0, 0, 0.3);
+  border-right: 1px solid #e0e0e0;
+  transition: all 0.3s ease-in-out;
+  overflow-y: auto;
+  color: black;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.left-sidebar.hidden {
+  width: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.left-sidebar.visible {
+  width: 250px;
+  padding: 15px;
+}
+.new-entry-button {
+  background-color: #3943ff;
+  color: white;
+  width: 100%;
+  padding: 8px;
+  margin-top: 10px;
+  border-radius: 10px;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+.sidebar-content h3 {
+  font-size: 25px;
+  font-weight: bold;
+}
+.sidebar-content ul {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+}
+
+.sidebar-content li {
+  padding: 5px 0;
+  cursor: pointer;
+}
+
+.sidebar-content li:hover {
+  color: #646cff;
+}
+
+.sidebar-toggle-button {
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #333;
+  cursor: pointer;
+  padding: 0 15px;
+  margin-right: 10px;
+}
+
+/* Adjust main container for sidebar */
+.app-wrapper.sidebar-open .main-container {
+  width: calc(100% - 250px);
+}
+
+/* When both sidebar and modal are open, adjust layout */
+.app-wrapper.modal-open.sidebar-open .main-container {
+  width: calc(50% - 250px);
+}
+
+.sidebar-content li.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 0;
+  cursor: pointer;
 }

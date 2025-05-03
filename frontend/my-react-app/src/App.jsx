@@ -1,23 +1,31 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './App.css'
-import RealtimeChat from './RealtimeChat'
 import Realtime2 from './Realtime2'
-
+import LeftSidebar from './LeftSidebar'
 
 function App() {
-  const [count, setCount] = useState(0)
+
   const [message, setMessage] = useState('')
   const [response, setResponse] = useState('')
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   const handleMessageChange = (e) => {
     setMessage(e.target.value)
   }
 
-  const toggleModal = () => {
-    setIsModalOpen(!isModalOpen)
+  const openModal = () => {
+    setIsModalOpen(true)
+    setIsSidebarOpen(false)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setIsSidebarOpen(true)
+  }
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen)
   }
 
   const handleSubmit = async (e) => {
@@ -38,24 +46,24 @@ function App() {
   }
 
   return (
-    <div className={`app-wrapper ${isModalOpen ? 'modal-open' : ''}`}>
+    <div className={`app-wrapper ${isModalOpen ? 'modal-open' : ''} ${isSidebarOpen ? 'sidebar-open' : ''}`}>
+      <LeftSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
+      
       <div className="main-container"> 
         <div className="title-container">
-          <h1>Journal AI</h1>
-          <button onClick={toggleModal} className="modal-toggle-button">
-            Open Panel
+         
+          <h1>How are you feeling today?</h1>
+      
+          <button className="modal-toggle-button" onClick={openModal}>
+            Open Modal
           </button>
         </div>
         
-        {response ?  (
+        {response && (
           <div className="response-container">
             <p className="text-gray-700">{response}</p>
           </div>
-        ) :(
-          <div className="notebook-container">
-            <img src="notebook.svg" height="50" width="50" alt="logo" />
-          </div>
-        )}
+        ) }
 
         <div className="chat-container">
           <form onSubmit={handleSubmit}>
@@ -78,7 +86,7 @@ function App() {
       </div>
       
       <div className={`side-modal ${isModalOpen ? 'open' : ''}`}>
-        <button onClick={toggleModal} className="close-modal-button">
+        <button onClick={closeModal} className="close-modal-button">
           &times;
         </button>
        
