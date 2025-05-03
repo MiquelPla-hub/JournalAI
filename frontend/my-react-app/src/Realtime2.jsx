@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
-function Realtime2({ setRecomendations}) {
+function Realtime2({ setRecomendations, isConnected, setIsConnected, setCircleColor}) {
 
   
-  const [isConnected, setIsConnected] = useState(false);
+
+  const [transcribedText, setTranscribedText] = useState('');
   const dataChannelRef = React.useRef(null);
   const pcRef = React.useRef(null);
   const summaryIntervalRef = React.useRef(null);
+  const streamRef = React.useRef(null);
   
   const mediaRecorderRef = React.useRef(null);
   const audioChunksRef = React.useRef([]);
@@ -34,7 +36,41 @@ function Realtime2({ setRecomendations}) {
       // Set up to play remote audio from the model
       const audioEl = document.createElement("audio");
       audioEl.autoplay = true;
-      pc.ontrack = e => audioEl.srcObject = e.streams[0];
+      audioEl.autoplay = true;
+      pc.ontrack = (e) => {
+  const stream = e.streams[0];
+  audioEl.srcObject = stream;
+
+  // Web Audio API to analyze audio stream
+  const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  const source = audioContext.createMediaStreamSource(stream);
+  const analyser = audioContext.createAnalyser();
+  analyser.fftSize = 512;
+  const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+  source.connect(analyser);
+
+  let speaking = false;
+
+  const detectSpeaking = () => {
+    analyser.getByteFrequencyData(dataArray);
+    const volume = dataArray.reduce((a, b) => a + b, 0) / dataArray.length;
+
+    if (volume > 10 && !speaking) {
+      speaking = true;
+      console.log("[AI started speaking - real audio detected]");
+      setCircleColor('#646cff')
+    } else if (volume <= 5 && speaking) {
+      speaking = false;
+      console.log("[AI stopped speaking]");
+      setCircleColor('black')
+    }
+
+    requestAnimationFrame(detectSpeaking);
+  };
+
+  detectSpeaking();
+};
 
       // Add local audio track for microphone input in the browser
       const ms = await navigator.mediaDevices.getUserMedia({
@@ -84,6 +120,8 @@ function Realtime2({ setRecomendations}) {
 
   // New function to start recording audio
   const startRecording = (mediaStream) => {
+    streamRef.current = mediaStream; // Store the stream for cleanup
+    
     const mediaRecorder = new MediaRecorder(mediaStream);
     mediaRecorderRef.current = mediaRecorder;
     audioChunksRef.current = [];
@@ -185,11 +223,9 @@ function Realtime2({ setRecomendations}) {
     try {
       const serverEvent = JSON.parse(e.data);
       
-
       // Handle different types of server events
       switch (serverEvent.type) {
         case "session.created":
-     
           // Update session with instructions if needed
           updateSessionInstructions();
           
@@ -197,48 +233,32 @@ function Realtime2({ setRecomendations}) {
           summaryIntervalRef.current = setInterval(() => {
             requestEmotionSummary();
           }, 30000);
-          
           break;
         
         case "input_audio_buffer.speech_started":
-        
           break;
           
         case "input_audio_buffer.speech_stopped":
-          
-       
           break;
           
         case "response.text.delta":
-          // Handle incremental text updates
-          if (serverEvent.delta && serverEvent.delta.text) {
-            addModelMessage(serverEvent.delta.text, true);
-          }
+          // We're not tracking text responses anymore
+          
           break;
           
         case "response.done":
-        
           // Extract and handle final content if available
           if (serverEvent.response && serverEvent.response.output) {
             const output = serverEvent.response.output;
             if (output && output.length > 0 && output[0].content) {
-                const transcript = output[0].content[0].transcript;
-                console.log(transcript);
-              } 
-            
-            // Look for text content in the output
-            const textContent = output.find(item => item.type === 'text');
-            if (textContent && textContent.text) {
-              console.log("Adding final text content:", textContent.text);
-              // This ensures we get the final complete text if needed
-              addModelMessage(textContent.text, false);
+              const transcript = output[0].content[0].transcript;
+              console.log(transcript);
             }
           }
           break;
           
-          
         default:
-          // Handle other event types as need
+          // Handle other event types as needed
       }
     } catch (error) {
       console.error("Error handling server event:", error, e.data);
@@ -267,9 +287,6 @@ function Realtime2({ setRecomendations}) {
     // Send the message to create a conversation item
     dataChannelRef.current.send(JSON.stringify(createItemEvent));
     
-    // Add message to UI
-    addUserMessage(text);
-    
     // Request a response from the model
     const responseEvent = {
       type: "response.create",
@@ -278,20 +295,16 @@ function Realtime2({ setRecomendations}) {
     dataChannelRef.current.send(JSON.stringify(responseEvent));
   };
 
-  // Add a user message to the UI
-  const addUserMessage = (text) => {
-
-    setMessages(prev => [...prev, { role: 'user', content: text }]);
-  };
-
-
-
-  // Modify disconnect to stop recording
   const disconnect = () => {
     // Stop recording if active
     if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
+    }
     
+    // Stop and release media stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
     }
     
     // Clear the summary interval
@@ -319,45 +332,64 @@ function Realtime2({ setRecomendations}) {
           dataChannelRef.current.close();
         }
         setIsConnected(false);
-       
       }, 1000);
     } else {
       if (pcRef.current) {
         pcRef.current.close();
       }
       setIsConnected(false);
-      
     }
   };
 
   // Clean up on component unmount
   useEffect(() => {
     return () => {
+      // Stop recording if active
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+        mediaRecorderRef.current.stop();
+      }
+      
+      // Stop and release media stream
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      
       if (summaryIntervalRef.current) {
         clearInterval(summaryIntervalRef.current);
       }
+      
+      // Close any open connections
+      if (pcRef.current) {
+        pcRef.current.close();
+      }
+      
+      // Clean up any audio elements added to the DOM
+      document.querySelectorAll('audio').forEach(el => {
+        if (el.srcObject && !el.hasAttribute('controls')) {
+          el.srcObject = null;
+          el.remove();
+        }
+      });
     };
   }, []);
 
-
-
   return (
     <>
-    
-      
-
-        <button 
-          onClick={isConnected ? disconnect : connectToRealtime}
-          style={{ backgroundColor: isConnected ? 'red' : '' }}
-        >
-          {!isConnected ? (
-            "Talk"
-          ) : (
-            "Stop"
-          )}
-        </button>
-      
-      </>
+      <button 
+        onClick={() => {
+          if(isConnected){
+            disconnect();
+            setIsConnected(false);
+          }else{
+            connectToRealtime();
+            // We'll let the data channel open event set isConnected to true
+          }
+        }}
+        style={{ backgroundColor: isConnected ? 'red' : '' }}
+      >
+        {!isConnected ? "Talk" : "Stop"}
+      </button>
+    </>
   );
 }
 

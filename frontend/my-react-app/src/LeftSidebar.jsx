@@ -1,12 +1,12 @@
 import React from 'react';
 
 import { FiHome, FiPlus, FiBook, FiSettings } from "react-icons/fi";
-function LeftSidebar({ isOpen, onClose }) {
+function LeftSidebar({ isOpen, onClose, setNewEntry }) {
   return (
     <div className={`left-sidebar ${isOpen ? 'visible' : 'hidden'}`}>
       <div className="sidebar-content">
         <h3>Journal AI</h3>
-        <button className="new-entry-button">
+        <button className="new-entry-button" onClick={() => setNewEntry(true)}>
             <FiPlus size={20} /> <span>New Entry</span>
         </button>
         <ul>
